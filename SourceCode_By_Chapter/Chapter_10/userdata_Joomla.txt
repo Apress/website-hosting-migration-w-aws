@@ -1,0 +1,18 @@
+#!/bin/bash
+yum update -y
+yum install -y httpd24 php56 mysql55-server php56-mysqlnd
+service httpd start
+chkconfig httpd on
+groupadd www
+usermod -a -G www ec2-user
+chown -R root:www /var/www
+chmod 2775 /var/www
+mkdir /var/www/html/joomla
+wget https://github.com/joomla/joomla-cms/releases/download/3.6.5/Joomla_3.6.5-Stable-Full_Package.tar.gz
+tar -xvzf Joomla_3.6.5-Stable-Full_Package.tar.gz -C /var/www/html/joomla
+find /var/www -type d -exec chmod 2775 {} +
+find /var/www -type f -exec chmod 0664 {} +
+echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
+cp /var/www/html/joomla/installation/configuration.php-dist > /var/www/html/joomla/configuration.php
+find /var/www/html/joomla/installation -type d -exec chmod 2775 {} +
+find /var/www/html/joomla/configuration.php -type f -exec chmod 0666 {} +

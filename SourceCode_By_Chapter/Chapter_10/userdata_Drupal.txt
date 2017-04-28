@@ -1,0 +1,22 @@
+#!/bin/bash
+yum update -y
+yum install -y httpd24 php70 php70-mysqlnd php70-mbstring php70-gd mysql55-server 
+service httpd start
+chkconfig httpd on
+groupadd www
+usermod -a -G www ec2-user
+chown -R root:www /var/www
+chmod 2775 /var/www
+wget https://ftp.drupal.org/files/projects/drupal-7.53.tar.gz
+tar -xvzf drupal-7.53.tar.gz -C /var/www/html
+find /var/www -type d -exec chmod 2775 {} +
+find /var/www -type f -exec chmod 0664 {} +
+echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
+chown -R root:www /var/www/html/drupal-7.53
+chmod 2775 /var/www/html/drupal-7.53/sites/default
+mkdir /var/www/html/drupal-7.53/sites/default/files
+find /var/www/html/drupal-7.53 -type d -exec chmod 2775 {} +
+find /var/www/html/drupal-7.53/sites/default/files -type d -exec chmod 2776 {} + 
+find /var/www/html/drupal-7.53 -type f -exec chmod 0664 {} +
+cp /var/www/html/drupal-7.53/sites/default/default.settings.php > /var/www/html/drupal-7.53/sites/default/settings.php
+find /var/www/html/drupal-7.53/sites/default/settings.php -type f -exec chmod 0776 {} +

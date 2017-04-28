@@ -1,0 +1,1 @@
+aws ec2 run-instances --image-id ami-1e299d7e --count 1 --instance-type t2.micro --user-data file://userdata_Joomla.txt --security-group-ids sg-5381752b --key-name nadonhosting

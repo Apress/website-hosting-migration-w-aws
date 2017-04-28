@@ -1,0 +1,15 @@
+{
+   "AWSTemplateFormatVersion" : "2010-09-09",
+   "Description" : "Creation of an EC2 Instance using CloudFormation",
+   "Resources" : {
+      "WebServer" : {
+         "Type" : "AWS::EC2::Instance",
+         "Properties" : {
+            "ImageId" : "ami-1e299d7e",
+            "KeyName" : "nadonhosting",
+			"InstanceType" : "t2.micro",
+			"SecurityGroupIds" : ["sg-5381752b"]
+         }
+      }
+   }
+}

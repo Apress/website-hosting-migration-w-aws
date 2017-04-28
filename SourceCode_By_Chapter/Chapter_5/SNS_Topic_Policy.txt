@@ -1,0 +1,20 @@
+{
+  "Version": "2008-10-17",
+  "Id": "SNS-Policy",
+  "Statement": [
+    {
+      "Sid": "SNS-Statement-ID",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Action": "SNS:Publish",
+      "Resource": "arn:aws:sns:us-west-2:704427294249:myContactFormNotification",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:s3:*:*:nadonhostingcontactform"
+        }
+      }
+    }
+  ]
+}

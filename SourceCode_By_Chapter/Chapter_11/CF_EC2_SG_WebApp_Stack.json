@@ -1,0 +1,101 @@
+{
+   "AWSTemplateFormatVersion" : "2010-09-09",
+   "Description" : "Creation of an EC2, Security Group and Install of Apache / PHP using CloudFormation",
+   "Resources" : {
+      "WebServer" : {
+         "Type" : "AWS::EC2::Instance",
+         "Metadata" : {
+         "AWS::CloudFormation::Init" : {
+			"configSets" : {
+            "webapp_install" : ["install_cfn", "install_webserver"]
+					},
+			"install_cfn" : {
+				"files": {
+					"/etc/cfn/cfn-hup.conf": {
+						"content": { "Fn::Join": [ "", [
+						"[main]\n",
+						"stack=", { "Ref": "AWS::StackId" }, "\n",
+						"region=", { "Ref": "AWS::Region" }, "\n"
+						]]},
+						"mode"  : "000400",
+						"owner" : "root",
+						"group" : "root"
+					},
+					"/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+						"content": { "Fn::Join": [ "", [
+						"[cfn-auto-reloader-hook]\n",
+						"triggers=post.update\n",
+						"path=Resources.WebServer.Metadata.AWS::CloudFormation::Init\n",
+						"action=/opt/aws/bin/cfn-init -v ",
+                          "         --stack ", { "Ref" : "AWS::StackName" },
+                          "         --resource WebServer ",
+                          "         --configsets webapp_install",
+                          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+						]]},          
+						"mode"  : "000400",
+						"owner" : "root",
+						"group" : "root"
+					}
+				},
+				"services" : {
+					"sysvinit" : {
+					"cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
+                              "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"] }
+					}
+				}
+			},
+          "install_webserver" : {
+				"packages" : {
+					"yum" : {
+						"php"          : [],
+						"httpd"        : []
+					}
+				},
+				"services" : {
+					"sysvinit" : {
+						"httpd"  : { "enabled" : "true", "ensureRunning" : "true" }
+						}
+					}
+				}
+			}
+		},
+		 "Properties" : {
+            "ImageId" : "ami-1e299d7e",
+            "KeyName" : "nadonhosting",
+			"InstanceType" : "t2.micro",
+			"SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
+			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+                       "#!/bin/bash -xe\n",
+                       "yum update -y aws-cfn-bootstrap\n",
+
+                       "/opt/aws/bin/cfn-init -v ",
+                       "         --stack ", { "Ref" : "AWS::StackName" },
+                       "         --resource WebServer ",
+                       "         --configsets webapp_install ",
+                       "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+                       "/opt/aws/bin/cfn-signal -e $? ",
+                       "         --stack ", { "Ref" : "AWS::StackName" },
+                       "         --resource WebServer ",
+                       "         --region ", { "Ref" : "AWS::Region" }, "\n"
+			]]}}
+         }
+      },
+	  "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+		  {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "24.57.80.57/32"}
+			]
+		}      
+		}
+	},
+	"Outputs" : {
+		"WebsiteURL" : {
+			"Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ]}]]},
+			"Description" : "Web Server DNS Address"
+			}
+		}	
+}
